@@ -2,6 +2,8 @@ var assign = require('object-assign')
 var Promise = require('any-promise')
 
 module.exports = function around (block) {
+  if (!block) block = function (t, next) { return next() }
+
   return function (test) {
     return function (name, fn) {
       var ended
