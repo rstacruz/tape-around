@@ -31,9 +31,9 @@ testBlock(test)('synchronous test', function (t) {
 })
 ```
 
-## Example
+## Passing data
 
-You can use this to build data before your tests and clean them up after.
+You can use this to build data before your tests and clean them up after. Call `run()` with arguments and they will be passed onto your tests as additional arguments after `t`.
 
 ```js
 var test = require('tape')
