@@ -18,13 +18,13 @@ var around = require('tape-around')
 
 testBlock = around(function (t, run) {
   t.pass('before hooks')
-  run(1337)
+  run()
   t.pass('after hooks')
   t.end()
 })
 
-testBlock(test)('synchronous test', function (t, value) {
-  t.equal(value, 1337)
+testBlock(test)('synchronous test', function (t) {
+  t.equal(50 * 4, 200)
   t.end()
 })
 ```
