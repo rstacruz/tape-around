@@ -16,6 +16,7 @@ From within the function block you gave, call `run()` to invoke the test.
 var test = require('tape')
 var around = require('tape-around')
 
+// Define a test block using around().
 testBlock = around(function (t, run) {
   t.pass('before hooks')
   run()
@@ -23,6 +24,7 @@ testBlock = around(function (t, run) {
   t.end()
 })
 
+// Use it just like you would use test()
 testBlock(test)('synchronous test', function (t) {
   t.equal(50 * 4, 200)
   t.end()
