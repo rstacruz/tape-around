@@ -8,7 +8,29 @@
 
 ## Usage
 
-Call `around(function (t, run))(test)` to define a test block. The given function will be executed as the test. From within that block, call `run()` to invoke the test.
+Call `around(function (t, run))(test)` to define a test block. The given function will be executed as the test. The return value of this is a function that works exactly like tape's `test`.
+
+From within the function block you gave, call `run()` to invoke the test.
+
+```js
+var test = require('tape')
+
+testBlock = around(function (t, run) {
+  t.pass('before hooks')
+  run(1337)
+  t.pass('after hooks')
+  t.end()
+})
+
+testBlock(test)('synchronous test', function (t, value) {
+  t.equal(value, 1337)
+  t.end()
+})
+```
+
+## Example
+
+You can use this to build data before your tests and clean them up after.
 
 ```js
 var test = require('tape')
@@ -98,6 +120,26 @@ one(two(test))('chaining', function (t, value) {
   /* ... */
 })
 ```
+
+## Example: Sinon
+
+You can create [sinon][] sandboxes to automatically clear out sinon stubs.
+
+```js
+var sandbox = around(function (t, next) {
+  var sandbox = require('sinon').sandbox.create()
+  return next(sandbox)
+    .then(function () { sandbox.restore() })
+})
+
+sandbox(test)('testing with sinon', function (t, sinon) {
+  sinon.stub($, 'ajax')
+  // ...
+  t.end()
+})
+```
+
+[sinon]: http://sinonjs.org/
 
 ## Thanks
 
