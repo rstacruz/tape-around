@@ -1,0 +1,32 @@
+{
+  "name": "tape-around",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "author": "Rico Sta. Cruz <rico@ricostacruz.com>",
+  "license": "MIT",
+  "dependencies": {
+    "object-assign": "4.0.1",
+    "tape": "4.4.0"
+  },
+  "devDependencies": {},
+  "description": "Add before and after hooks to tape tests",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rstacruz/tape-around.git"
+  },
+  "keywords": [
+    "tape",
+    "around",
+    "before",
+    "after",
+    "test",
+    "block"
+  ],
+  "bugs": {
+    "url": "https://github.com/rstacruz/tape-around/issues"
+  },
+  "homepage": "https://github.com/rstacruz/tape-around#readme"
+}
