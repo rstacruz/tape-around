@@ -1,23 +1,27 @@
 # tape-around
 
-> Add before and after hooks to tape tests
+> Add before and after hooks to [tape][] tests
 
 [![Status](https://travis-ci.org/rstacruz/tape-around.svg?branch=master)](https://travis-ci.org/rstacruz/tape-around "See test builds")
+
+[tape]: https://github.com/substack/tape
 
 ## Usage
 
 Call `around(function (t, next))(test)` to define a test block. The given function will be executed as the test. From within that block, call `next()` to invoke the test.
 
 ```js
+var test = require('tape')
+
 testBlock = around(function (t, next) {
-  t.pass('before called')
-  next(1337)
-  t.pass('after called')
+  var user = User.create({ name: 'John' })  // before
+  next(user)
+  user.destroy()  // after
   t.end()
 })
 
-testBlock(test)('synchronous', function (t, value) {
-  t.equal(value, 1337, 'value is passed from the block')
+testBlock(test)('synchronous test', function (t, user) {
+  t.equal(user.name, 'John', 'value is passed from the block')
   t.end()
 })
 ```
