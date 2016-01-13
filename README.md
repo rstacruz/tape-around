@@ -22,23 +22,6 @@ testBlock(test)('synchronous', function (t, value) {
 })
 ```
 
-## Promises in tests
-
-Your tests can return a promise. If it fails, the rejection message will be passed onto `t.error`.
-
-When tests return promises, there's no need to call `t.end()` in the test anymore.
-
-```js
-testBlock = around(/* ... */)
-
-testBlock(test)('promises', function (t, value) {
-  return new Promise((resolve, reject) => {
-    // do stuff here
-    resolve()
-  })
-})
-```
-
 ## Promises in blocks
 
 The block passed to `around()` can return a promise. In fact, `next()` will always return a promise, so you can chain that as well. If the `around()` block returns a rejected promise, the error will be passed onto `t.error`.
@@ -57,6 +40,23 @@ function after () { /* returns a promise */ }
 
 testBlock(test)('promises', function (t, value) {
   /* ... */
+})
+```
+
+## Promises in tests
+
+Your tests can return a promise. If it fails, the rejection message will be passed onto `t.error`.
+
+When tests return promises, there's no need to call `t.end()` in the test anymore.
+
+```js
+testBlock = around(/* ... */)
+
+testBlock(test)('promises', function (t, value) {
+  return new Promise((resolve, reject) => {
+    // do stuff here
+    resolve()
+  })
 })
 ```
 
@@ -81,3 +81,15 @@ testBlock(test)('promises', (t, value) => {
   })
 })
 ```
+
+## Thanks
+
+**tape-around** © 2016+, Rico Sta. Cruz. Released under the [MIT] License.<br>
+Authored and maintained by Rico Sta. Cruz with help from contributors ([list][contributors]).
+
+> [ricostacruz.com](http://ricostacruz.com) &nbsp;&middot;&nbsp;
+> GitHub [@rstacruz](https://github.com/rstacruz) &nbsp;&middot;&nbsp;
+> Twitter [@rstacruz](https://twitter.com/rstacruz)
+
+[MIT]: http://mit-license.org/
+[contributors]: http://github.com/rstacruz/tape-around/contributors
