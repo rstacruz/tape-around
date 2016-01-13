@@ -14,6 +14,7 @@ From within the function block you gave, call `run()` to invoke the test.
 
 ```js
 var test = require('tape')
+var around = require('tape-around')
 
 testBlock = around(function (t, run) {
   t.pass('before hooks')
