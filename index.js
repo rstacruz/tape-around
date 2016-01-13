@@ -28,11 +28,12 @@ module.exports = function around (block) {
 
       test(name, function (t) {
         var tt = assign({}, t, { end: mutexEnd(t, t.end, true) })
+        var args = [].slice.call(arguments, 1)
         // Invoke the block
-        var result = block(tt, function () {
-          var result = run(tt, [].slice.apply(arguments))
+        var result = block.apply(this, [tt].concat(args).concat([ function () {
+          var result = run(tt, [].slice.call(arguments))
           if (isPromise(result)) return result
-        })
+        } ]))
 
         if (isPromise(result)) {
           result

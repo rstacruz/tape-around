@@ -1,3 +1,4 @@
+require('loud-rejection')()
 var test = require('tape')
 var around = require('./index')
 var block
@@ -110,6 +111,27 @@ sandbox(test)('mutex (sandbox)', function (t, sinon) {
     tt.equal(value, 200, 'value is passed')
     setTimeout(function () { tt.end() })
   })
+})
+
+var block1 = around(function (t, next) {
+  next(1)
+  t.end()
+})
+
+var block2 = around(function (t, a, next) {
+  next(a, 2)
+  t.end()
+})
+
+block1(test)('nesting 1', function (t, a) {
+  t.equal(a, 1)
+  t.end()
+})
+
+block2(block1(test))('nesting 2', function (t, a, b) {
+  t.equal(a, 1)
+  t.equal(b, 2)
+  t.end()
 })
 
 test('standard', require('tape-eslint')())

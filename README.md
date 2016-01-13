@@ -111,16 +111,22 @@ testBlock(test)('promises', function (t, value) {
 })
 ```
 
-## Chaining
+## Nesting
 
 Since the return value of `around()(test)` works exactly like tape's `test`, you can chain them to make multiple `around` blocks wrap around each other.
 
 ```js
-var one = around(/* ... */)
-var two = around(/* ... */)
+var one = around((t, next) => {
+  return next(100)
+})
+var two = around((t, a, next) => {
+  return next(200)
+})
 
-one(two(test))('chaining', function (t, value) {
-  /* ... */
+one(two(test))('chaining', function (t, a, b) {
+  t.equal(a, 100)
+  t.equal(b, 200)
+  t.end()
 })
 ```
 
