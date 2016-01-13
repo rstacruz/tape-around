@@ -22,9 +22,31 @@ testBlock(test)('synchronous', function (t, value) {
 })
 ```
 
+## Asynchronous
+
+The `next()` function in the block always returns a promise. With this, you can invoke an after-test hook asynchronously.
+
+```js
+testBlock = around(function (t, next) {
+  t.pass('before called')
+  next()
+  .then(function () {
+    t.pass('after called')
+    t.end()
+  })
+})
+
+testBlock(test)('asynchronous', function (t, value) {
+  setTimeout(function () {
+    t.pass('i'm an async test')
+    t.end()
+  })
+})
+```
+
 ## Promises in blocks
 
-The block passed to `around()` can return a promise. In fact, `next()` will always return a promise, so you can chain that as well. If the `around()` block returns a rejected promise, the error will be passed onto `t.error`.
+The block passed to `around()` can return a promise. In fact, since `next()` will always return a promise, you can chain that as well. If the `around()` block returns a rejected promise, the error will be passed onto `t.error`.
 
 When blocks return promises, there's no need to call `t.end()` in the block anymore.
 
@@ -45,7 +67,7 @@ testBlock(test)('promises', function (t, value) {
 
 ## Promises in tests
 
-Your tests can return a promise. If it fails, the rejection message will be passed onto `t.error`.
+Your tests, too, can return a promise. If it fails, the rejection message will be passed onto `t.error`.
 
 When tests return promises, there's no need to call `t.end()` in the test anymore.
 
@@ -60,25 +82,16 @@ testBlock(test)('promises', function (t, value) {
 })
 ```
 
-## Asynchronous
+## Chaining
 
-Since promises are supported, you can wrap around asynchronous blocks.
+Since the return value of `around()(test)` works exactly like tape's `test`, you can chain them to make multiple `around` blocks wrap around each other.
 
 ```js
-testBlock = around(function (t, next) {
-  return next.then(function () {
-    t.pass('called after the async test')
-  })
-})
+var one = around(/* ... */)
+var two = around(/* ... */)
 
-function before () { /* returns a promise */ }
-function after () { /* returns a promise */ }
-
-testBlock(test)('promises', (t, value) => {
-  setTimeout(() => {
-    t.pass('this is an async test')
-    t.end()
-  })
+one(two(test))('chaining', function (t, value) {
+  /* ... */
 })
 ```
 
