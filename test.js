@@ -1,6 +1,5 @@
 var test = require('tape')
 var around = require('./index')
-var sinon = require('sinon')
 var block
 
 var sandbox = around(function (t, next) {
@@ -112,3 +111,5 @@ sandbox(test)('mutex (sandbox)', function (t, sinon) {
     setTimeout(function () { tt.end() })
   })
 })
+
+test('standard', require('tape-eslint')())
