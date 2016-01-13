@@ -30,6 +30,23 @@ block(test)('synchronous', function (t, value) {
 })
 
 block = around(function (t, next) {
+  t.plan(3)
+  t.pass('before called')
+  next(200)
+    .then(function () {
+      t.pass('after called')
+      t.end()
+    })
+})
+
+block(test)('promise', function (t, value) {
+  return new Promise(function (resolve, reject) {
+    t.equal(value, 200, 'value is passed')
+    resolve()
+  })
+})
+
+block = around(function (t, next) {
   t.pass('before called')
   next(200)
   t.pass('after called')

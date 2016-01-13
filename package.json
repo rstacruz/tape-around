@@ -8,6 +8,7 @@
   "author": "Rico Sta. Cruz <rico@ricostacruz.com>",
   "license": "MIT",
   "dependencies": {
+    "any-promise": "0.1.0",
     "object-assign": "4.0.1",
     "tape": "4.4.0"
   },

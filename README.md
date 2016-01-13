@@ -2,6 +2,10 @@
 
 > Add before and after hooks to tape tests
 
+## Usage
+
+Call `around(function (t, next))(test)` to define a test block. The given function will be executed as the test. From within that block, call `next()` to invoke the test.
+
 ```js
 testBlock = around(function (t, next) {
   t.pass('before called')
@@ -15,3 +19,7 @@ testBlock('synchronous', function (t, value) {
   t.end()
 })
 ```
+
+## Asynchronous
+
+Promises are supported.

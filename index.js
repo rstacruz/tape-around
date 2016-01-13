@@ -1,4 +1,5 @@
 var assign = require('object-assign')
+var Promise = require('any-promise')
 
 module.exports = function around (block) {
   return function (test) {
@@ -6,7 +7,10 @@ module.exports = function around (block) {
       var run = function (t, args) {
         return new Promise(function (resolve, reject) {
           var tt = assign({}, t, { end: resolve })
-          fn.apply(this, [tt].concat(args))
+          var result = fn.apply(this, [tt].concat(args))
+          if (isPromise(result)) {
+            result.then(resolve, reject)
+          }
         })
       }
 
@@ -20,4 +24,8 @@ module.exports = function around (block) {
       })
     }
   }
+}
+
+function isPromise (promise) {
+  return promise && typeof promise.then === 'function'
 }
