@@ -57,7 +57,7 @@ testBlock = around(function (t, run) {
   t.pass('before called')
   run()
   .then(function () {
-    t.pass('after called')
+    t.pass("called after your test's t.end()")
     t.end()
   })
 })
@@ -121,7 +121,7 @@ one(two(test))('chaining', function (t, value) {
 })
 ```
 
-## Example: Sinon
+## Sinon.js example
 
 You can create [sinon][] sandboxes to automatically clear out sinon stubs.
 
