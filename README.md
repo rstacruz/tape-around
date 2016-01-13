@@ -2,6 +2,8 @@
 
 > Add before and after hooks to tape tests
 
+[![Status](https://travis-ci.org/rstacruz/tape-around.svg?branch=master)](https://travis-ci.org/rstacruz/tape-around "See test builds")
+
 ## Usage
 
 Call `around(function (t, next))(test)` to define a test block. The given function will be executed as the test. From within that block, call `next()` to invoke the test.
