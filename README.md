@@ -38,7 +38,7 @@ testBlock = around(function (t, next) {
 
 testBlock(test)('asynchronous', function (t, value) {
   setTimeout(function () {
-    t.pass('i'm an async test')
+    t.pass('im an async test')
     t.end()
   })
 })
