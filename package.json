@@ -12,7 +12,10 @@
     "object-assign": "4.0.1",
     "tape": "4.4.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "sinon": "1.17.2",
+    "sinon-in-sandbox": "1.0.0"
+  },
   "description": "Add before and after hooks to tape tests",
   "repository": {
     "type": "git",
