@@ -8,14 +8,14 @@
 
 ## Usage
 
-Call `around(function (t, next))(test)` to define a test block. The given function will be executed as the test. From within that block, call `next()` to invoke the test.
+Call `around(function (t, run))(test)` to define a test block. The given function will be executed as the test. From within that block, call `run()` to invoke the test.
 
 ```js
 var test = require('tape')
 
-testBlock = around(function (t, next) {
+testBlock = around(function (t, run) {
   var user = User.create({ name: 'John' })  // before
-  next(user)
+  run(user)
   user.destroy()  // after
   t.end()
 })
@@ -28,12 +28,12 @@ testBlock(test)('synchronous test', function (t, user) {
 
 ## Asynchronous
 
-The `next()` function in the block always returns a promise. With this, you can invoke an after-test hook asynchronously.
+The `run()` function in the block always returns a promise. With this, you can invoke an after-test hook asynchronously.
 
 ```js
-testBlock = around(function (t, next) {
+testBlock = around(function (t, run) {
   t.pass('before called')
-  next()
+  run()
   .then(function () {
     t.pass('after called')
     t.end()
@@ -50,14 +50,14 @@ testBlock(test)('asynchronous', function (t, value) {
 
 ## Promises in blocks
 
-The block passed to `around()` can return a promise. In fact, since `next()` will always return a promise, you can chain that as well. If the `around()` block returns a rejected promise, the error will be passed onto `t.error`.
+The block passed to `around()` can return a promise. In fact, since `run()` will always return a promise, you can chain that as well. If the `around()` block returns a rejected promise, the error will be passed onto `t.error`.
 
 When blocks return promises, there's no need to call `t.end()` in the block anymore.
 
 ```js
-testBlock = around(function (t, next) {
+testBlock = around(function (t, run) {
   return before()
-    .then(next)
+    .then(run)
     .then(after)
 })
 
