@@ -170,6 +170,9 @@ var intercept = around(test, 'interception:')
       pass: function () {
         calls.push([ 'pass' ].concat([].slice.apply(arguments)))
       },
+      error: function () {
+        calls.push([ 'error' ].concat([].slice.apply(arguments)))
+      },
       equal: function () {
         calls.push([ 'equal' ].concat([].slice.apply(arguments)))
       },
@@ -229,6 +232,61 @@ intercept('errors', function (t, _test, then) {
   block('simple test', function (_t) {
     _t.pass('hi')
     throw new Error('snap')
+    _t.end()
+  })
+})
+
+/*
+ * Errors and after
+ */
+
+intercept('errors and after', function (t, _test, then) {
+  then(function (err, calls) {
+    t.ok(err, 'has an error')
+    t.equal(err.message, 'snap', 'has the correct error')
+    t.deepEqual(calls, [
+      [ 'pass', 'hi' ],
+      [ 'pass', 'after called' ]
+    ])
+    t.end()
+  })
+
+  var block = around(_test)
+    .after(function (t) {
+      t.pass('after called')
+    })
+
+  block('simple test', function (_t) {
+    _t.pass('hi')
+    throw new Error('snap')
+    _t.end()
+  })
+})
+
+/*
+ * Multiple after errors
+ */
+
+intercept('multiple after errors', function (t, _test, then) {
+  then(function (err, calls) {
+    t.deepEqual(err, new Error('error 2'))
+    t.deepEqual(calls, [
+      [ 'pass', 'hi' ],
+      [ 'error', new Error('error 1') ]
+    ])
+    t.end()
+  })
+
+  var block = around(_test)
+    .after(function (t) {
+      throw new Error('error 1')
+    })
+    .after(function (t) {
+      throw new Error('error 2')
+    })
+
+  block('simple test', function (_t) {
+    _t.pass('hi')
     _t.end()
   })
 })

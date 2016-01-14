@@ -63,6 +63,10 @@ module.exports = function around (tape, msg, _hooks) {
   }
 }
 
+/*
+ * Invokes all blocks in the given `hooks`. Returns a promise.
+ */
+
 function invoke (hooks, t) {
   return function (args) {
     var pipeline = Promise.resolve(args)
@@ -94,6 +98,10 @@ function invokeForce (hooks, t) {
     return pipeline
   }
 }
+
+/*
+ * Turns a block (before, after, or test) into a promise.
+ */
 
 function promisify (fn, t) {
   return function (args) {
