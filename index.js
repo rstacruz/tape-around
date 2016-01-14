@@ -29,9 +29,24 @@ module.exports = function around (tape, msg, _hooks) {
     var newname = msg ? msg + ' ' + name : name
 
     return tape(newname, function (t) {
-      Promise.resolve()
+      var _args
+
+      var block = Promise.resolve()
         .then(invoke(hooks.before, t))
+        .then(function (args) { _args = args; return args })
         .then(promisify(fn, t))
+
+      // catch errors in before or the test. ensure after() hooks get invoked.
+      // if they both yield errors, oh well.
+      // TODO: invoke all after hooks even if one of them dies
+      block
+        .catch(function (err) {
+          invoke(hooks.after, t)(_args)
+            .then(function () { t.end(err) })
+            .catch(function (err2) { t.error(err); t.end(err2) })
+        })
+
+      block
         .then(invoke(hooks.after, t))
         .then(function () { t.end() })
         .catch(function (err) { t.end(err) })
