@@ -162,7 +162,7 @@ var nextTest = around(test)
 addTest('using t.next', function (t, a, b, c) {
   t.equal(a, 100)
   t.equal(b, 200)
-  t.equal(c, 200)
+  t.equal(c, 300)
   t.end()
 })
 ```
@@ -186,7 +186,7 @@ var addTest = around(test)
 addTest('using nextAdd', function (t, a, b, c) {
   t.equal(a, 100)
   t.equal(b, 200)
-  t.equal(c, 200)
+  t.equal(c, 300)
   t.end()
 })
 ```
