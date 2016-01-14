@@ -324,3 +324,35 @@ intercept('multiple before/after errors', function (t, _test, then) {
     _t.end()
   })
 })
+
+/*
+ * Multiple before errors
+ */
+
+intercept('multiple before errors', function (t, _test, then) {
+  then(function (err, calls) {
+    t.pass('then() called')
+    t.deepEqual(err, new Error('error 0'), 'has last error')
+    t.deepEqual(calls, [
+      [ 'pass', 100 ]
+    ], 'has values from before')
+    t.end()
+  })
+
+  var block = around(_test)
+    .before(function (t) {
+      t.next(100)
+    })
+    .before(function (t, a) {
+      throw new Error('error 0')
+    })
+    .after(function (t, a) {
+      t.pass(a)
+      t.end()
+    })
+
+  block('simple test', function (_t) {
+    _t.pass('hi')
+    _t.end()
+  })
+})

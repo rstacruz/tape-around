@@ -32,7 +32,6 @@ module.exports = function around (tape, msg, _hooks) {
       var _args
 
       var block = Promise.resolve()
-        // TODO: save args every before() step
         .then(invoke(hooks.before, t))
         .then(function (args) { _args = args; return args })
         .then(promisify(fn, t))
@@ -40,15 +39,16 @@ module.exports = function around (tape, msg, _hooks) {
         .then(function (args) {
           invokeForce(hooks.after, t)(args)
             .then(function () { t.end() })
-            .catch(function (err) { t.end(err) })
+            .catch(function (errArgs) { t.end(errArgs.error) })
         })
 
         // catch errors in `before` or in the test. ensure after() hooks get
-        // invoked. if they both yield errors, oh well.
-        .catch(function (err) {
-          invokeForce(hooks.after, t)(_args)
-            .then(function () { t.end(err) })
-            .catch(function (err2) { t.error(err); t.end(err2) })
+        // invoked. if they both yield errors, pass the errors through both
+        // `t.error` and `t.end`.
+        .catch(function (errArgs) {
+          invokeForce(hooks.after, t)(errArgs.args)
+            .then(function () { t.end(errArgs.error) })
+            .catch(function (errArgs2) { t.error(errArgs.error); t.end(errArgs2.error) })
         })
 
     })
@@ -91,10 +91,10 @@ function invokeForce (hooks, t) {
     hooks.forEach(function (hook, i) {
       pipeline = pipeline
         .then(promisify(hook, t))
-        .catch(function (err) {
-          if (i === len - 1) throw err
-          t.error(err)
-          return args
+        .catch(function (errArgs) {
+          if (i === len - 1) throw errArgs
+          t.error(errArgs.error)
+          return errArgs.args
         })
     })
     return pipeline
@@ -102,14 +102,20 @@ function invokeForce (hooks, t) {
 }
 
 /*
- * Turns a block (before, after, or test) into a promise.
+ * Turns a block (before, after, or test) into a promise. If it fails, reject
+ * with the object `{ error, args }` (so we keep args preserved even if errors
+ * happen).
  */
 
 function promisify (fn, t) {
   return function (args) {
     return new Promise(function (resolve, reject) {
       var tt = assign({}, t, { next: next, nextAdd: nextAdd, end: end })
-      fn.apply(this, [tt].concat(args || []))
+      try {
+        fn.apply(this, [tt].concat(args || []))
+      } catch (err) {
+        return reject({ error: err, args: args })
+      }
 
       function next () {
         var newargs = [].slice.call(arguments)
@@ -122,7 +128,7 @@ function promisify (fn, t) {
       }
 
       function end (err) {
-        if (err) reject(err)
+        if (err) reject({ error: err, args: args })
         else resolve(args)
       }
     })
