@@ -73,6 +73,17 @@ two('chaining', function (t, a, b) {
 })
 ```
 
+## Chaining
+
+You can add multiple [before()](#before) and [after()](#after) hooks.
+
+```js
+var one = around(test)
+  .before((t) => { t.nextAdd(100) })
+  .before((t) => { t.nextAdd(200) })
+  .before((t) => { t.nextAdd(300) })
+```
+
 ## API Reference
 
 ### around
