@@ -95,8 +95,8 @@ You can also call `.before()` and `.after()` to add hooks to the pipeline.
 
 ### before / after
 
-> `.before(fn)`<br>
-> `.after(fn)`
+> `around(...).before(fn)`<br>
+> `around(...).after(fn)`
 
 Adds before and after hooks to the pipeline. You may call this multiple times to add more functions.
 
