@@ -38,16 +38,15 @@ module.exports = function around (tape, msg, _hooks) {
 
       // catch errors in before or the test. ensure after() hooks get invoked.
       // if they both yield errors, oh well.
-      // TODO: invoke all after hooks even if one of them dies
       block
         .catch(function (err) {
-          invoke(hooks.after, t)(_args)
+          invokeForce(hooks.after, t)(_args)
             .then(function () { t.end(err) })
             .catch(function (err2) { t.error(err); t.end(err2) })
         })
 
       block
-        .then(invoke(hooks.after, t))
+        .then(invokeForce(hooks.after, t))
         .then(function () { t.end() })
         .catch(function (err) { t.end(err) })
     })
@@ -69,6 +68,28 @@ function invoke (hooks, t) {
     var pipeline = Promise.resolve(args)
     hooks.forEach(function (hook) {
       pipeline = pipeline.then(promisify(hook, t))
+    })
+    return pipeline
+  }
+}
+
+/*
+ * Like invoke(), but errors will still continue to run the next block
+ */
+
+function invokeForce (hooks, t) {
+  return function (args) {
+    var pipeline = Promise.resolve(args)
+    var _args
+    var len = hooks.length
+    hooks.forEach(function (hook, i) {
+      pipeline = pipeline
+        .then(promisify(hook, t))
+        .catch(function (err) {
+          if (i === len - 1) throw err
+          t.error(err)
+          return args
+        })
     })
     return pipeline
   }
