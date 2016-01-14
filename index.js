@@ -1,50 +1,67 @@
 var assign = require('object-assign')
 var Promise = require('any-promise')
 
-module.exports = function around (block) {
-  if (!block) block = function (t, next) { return next() }
+module.exports = function around (tape, _hooks) {
+  var hooks = {
+    before: _hooks && _hooks.before || [],
+    after: _hooks && _hooks.after || []
+  }
 
-  return function (test) {
-    return function (name, fn) {
-      var ended
+  run.before = before
+  run.after = after
+  return run
 
-      function mutexEnd (t, fn, real) {
-        return function () {
-          if (ended) return t.error('.end() called twice')
-          if (real) ended = true
-          fn.apply(this, arguments)
-        }
+  function run (name, fn) {
+    tape(name, function (t) {
+      Promise.resolve()
+        .then(invoke(hooks.before, t))
+        .then(promisify(fn, t))
+        .then(invoke(hooks.after, t))
+        .then(function () { t.end() })
+        .catch(function (err) { t.end(err) })
+    })
+  }
+
+  function before (fn) {
+    return around(tape, assign({}, hooks, { before: hooks.before.concat([fn]) }))
+  }
+
+  function after (fn) {
+    return around(tape, assign({}, hooks, { after: hooks.after.concat([fn]) }))
+  }
+}
+
+function invoke (hooks, t) {
+  return function (args) {
+    var pipeline = Promise.resolve(args)
+    hooks.forEach(function (hook) {
+      pipeline = pipeline.then(promisify(hook, t))
+    })
+    return pipeline
+  }
+}
+
+function promisify (fn, t) {
+  return function (args) {
+    return new Promise(function (resolve, reject) {
+      var tt = assign({}, t, { next: next, nextAdd: nextAdd, end: end })
+      fn.apply(this, [tt].concat(args || []))
+
+      function next () {
+        var newargs = [].slice.call(arguments)
+        resolve(newargs)
       }
 
-      var run = function (t, args) {
-        return new Promise(function (resolve, reject) {
-          var tt = assign({}, t, { end: mutexEnd(t, resolve, false) })
-          var result = fn.apply(this, [tt].concat(args))
-          if (isPromise(result)) {
-            result.then(resolve, reject)
-          }
-        })
+      function nextAdd () {
+        var newargs = [].slice.call(arguments)
+        resolve(args.concat(newargs))
       }
 
-      test(name, function (t) {
-        var tt = assign({}, t, { end: mutexEnd(t, t.end, true) })
-        var args = [].slice.call(arguments, 1)
-        // Invoke the block
-        var result = block.apply(this, [tt].concat(args).concat([ function () {
-          var result = run(tt, [].slice.call(arguments))
-          if (isPromise(result)) return result
-        } ]))
-
-        if (isPromise(result)) {
-          result
-          .then(function () { t.end() })
-          .catch(function (err) { tt.error(err.stack); t.end() })
-        } else {
-          Promise.resolve(result)
-          .catch(function (err) { tt.error(err.stack); t.end() })
-        }
-      })
-    }
+      function end (err) {
+        if (err) reject(err)
+        else resolve(args)
+      }
+    })
   }
 }
 
