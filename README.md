@@ -76,9 +76,11 @@ two('chaining', function (t, a, b) {
 
 ## API
 
-### around(test)
+### around(test, [prefix])
 
 Creates a wrapper around `test`. The parameter `test` can either be `require('tape')`, or another `around()` function. The resulting function is a function that works exactly like tape.
+
+If `prefix` *(string)* is given, test names will be prefixed by this name.
 
 You can also call `.before()` and `.after()` to add hooks to the pipeline.
 
