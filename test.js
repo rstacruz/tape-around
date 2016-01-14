@@ -109,6 +109,9 @@ var sandbox = around(test)
     t.end()
   })
 
+/*
+ * Intercepting calls
+ */
 
 test('intercepting calls', function (t) {
   var calls = []
@@ -150,5 +153,82 @@ test('intercepting calls', function (t) {
   block('simple', function (t) {
     t.pass('fake test called')
     t.end()
+  })
+})
+
+/*
+ * Intercept block
+ * using tape-around to test tape-around itself :)
+ */
+
+var intercept = around(test)
+  .before(function (t) {
+    var calls = []
+    var next
+
+    var _t = {
+      pass: function () {
+        calls.push([ 'pass' ].concat([].slice.apply(arguments)))
+      },
+      equal: function () {
+        calls.push([ 'equal' ].concat([].slice.apply(arguments)))
+      },
+      plan: function () {
+        calls.push([ 'plan' ].concat([].slice.apply(arguments)))
+      },
+      end: function (err) {
+        next(err, calls)
+      }
+    }
+
+    function then (fn) {
+      next = fn
+    }
+
+    var _test = function (name, fn) {
+      t.pass('test called')
+      fn(_t)
+    }
+
+    t.next(_test, then)
+  })
+
+/*
+ * simple case
+ */
+
+intercept('simple case', function (t, _test, then) {
+  then(function (err, calls) {
+    t.error(err)
+    t.deepEqual(calls, [ [ 'pass', 'hi' ] ])
+    t.end()
+  })
+
+  var block = around(_test)
+
+  block('simple test', function (_t) {
+    _t.pass('hi')
+    _t.end()
+  })
+})
+
+/*
+ * Errors
+ */
+
+intercept('errors', function (t, _test, then) {
+  then(function (err, calls) {
+    t.ok(err, 'has an error')
+    t.equal(err.message, 'snap', 'has the correct error')
+    t.deepEqual(calls, [ [ 'pass', 'hi' ] ])
+    t.end()
+  })
+
+  var block = around(_test)
+
+  block('simple test', function (_t) {
+    _t.pass('hi')
+    throw new Error('snap')
+    _t.end()
   })
 })

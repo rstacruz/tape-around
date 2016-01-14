@@ -76,15 +76,17 @@ two('chaining', function (t, a, b) {
 
 ## API
 
-### t.next()
+### t.next(params...)
 
-Passes values to the parameters of next functions in the pipeline.
+Calls the next function in the pipeline and passes `params` to the parameters.
+
+Note that calling `t.next()` with no arguments will erase the current arguments. If you wish to preserve them, use `t.end()`.
 
 ### t.end()
 
 This is changed so that you can invoke `t.end()` in any of the blocks (before, after, or the test) to call the next function in the pipeline. If there are no more functions in the pipeline, the test will be ended.
 
-### t.nextAdd()
+### t.nextAdd(params...)
 
 If you notice above, the parameter `a` is passed through `t.next()`. This may be cumbersome once you have a lot of parameters to pass. Use `t.nextAdd()` to simply append it to the already-passed parameters.
 
