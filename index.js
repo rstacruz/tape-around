@@ -18,11 +18,11 @@ module.exports = function around (tape, msg, _hooks) {
   }
 
   function only (name, fn) {
-    return run2.only(name, fn, tape.only)
+    return run2(name, fn, tape.only)
   }
 
   function skip (name, fn) {
-    return run2.skip(name, fn, tape.skip)
+    return run2(name, fn, tape.skip)
   }
 
   function run2 (name, fn, tape) {
@@ -36,19 +36,20 @@ module.exports = function around (tape, msg, _hooks) {
         .then(function (args) { _args = args; return args })
         .then(promisify(fn, t))
 
-      // catch errors in before or the test. ensure after() hooks get invoked.
-      // if they both yield errors, oh well.
-      block
+        .then(function (args) {
+          invokeForce(hooks.after, t)(args)
+            .then(function () { t.end() })
+            .catch(function (err) { t.end(err) })
+        })
+
+        // catch errors in `before` or in the test. ensure after() hooks get
+        // invoked. if they both yield errors, oh well.
         .catch(function (err) {
           invokeForce(hooks.after, t)(_args)
             .then(function () { t.end(err) })
             .catch(function (err2) { t.error(err); t.end(err2) })
         })
 
-      block
-        .then(invokeForce(hooks.after, t))
-        .then(function () { t.end() })
-        .catch(function (err) { t.end(err) })
     })
   }
 

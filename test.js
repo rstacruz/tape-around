@@ -180,6 +180,7 @@ var intercept = around(test, 'interception:')
         calls.push([ 'plan' ].concat([].slice.apply(arguments)))
       },
       end: function (err) {
+        t.pass('(intercept) end called')
         next(err, calls)
       }
     }
@@ -189,7 +190,7 @@ var intercept = around(test, 'interception:')
     }
 
     var _test = function (name, fn) {
-      t.pass('test called')
+      t.pass('(intercept) test called')
       fn(_t)
     }
 
@@ -240,7 +241,7 @@ intercept('errors', function (t, _test, then) {
  * Errors and after
  */
 
-intercept('errors and after', function (t, _test, then) {
+intercept.only('errors and after', function (t, _test, then) {
   then(function (err, calls) {
     t.ok(err, 'has an error')
     t.equal(err.message, 'snap', 'has the correct error')
@@ -297,6 +298,7 @@ intercept('multiple after errors', function (t, _test, then) {
 
 intercept('multiple before/after errors', function (t, _test, then) {
   then(function (err, calls) {
+    t.pass('then() called')
     t.deepEqual(err, new Error('error 2'), 'has last error')
     t.deepEqual(calls, [
       [ 'error', new Error('error 0') ]
