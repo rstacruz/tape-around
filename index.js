@@ -32,6 +32,7 @@ module.exports = function around (tape, msg, _hooks) {
       var _args
 
       var block = Promise.resolve()
+        // TODO: save args every before() step
         .then(invoke(hooks.before, t))
         .then(function (args) { _args = args; return args })
         .then(promisify(fn, t))

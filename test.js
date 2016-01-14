@@ -241,7 +241,7 @@ intercept('errors', function (t, _test, then) {
  * Errors and after
  */
 
-intercept.only('errors and after', function (t, _test, then) {
+intercept('errors and after', function (t, _test, then) {
   then(function (err, calls) {
     t.ok(err, 'has an error')
     t.equal(err.message, 'snap', 'has the correct error')
@@ -255,6 +255,7 @@ intercept.only('errors and after', function (t, _test, then) {
   var block = around(_test)
     .after(function (t) {
       t.pass('after called')
+      t.end()
     })
 
   block('simple test', function (_t) {
@@ -301,7 +302,7 @@ intercept('multiple before/after errors', function (t, _test, then) {
     t.pass('then() called')
     t.deepEqual(err, new Error('error 2'), 'has last error')
     t.deepEqual(calls, [
-      [ 'error', new Error('error 0') ]
+      [ 'error', new Error('error 0') ],
       [ 'error', new Error('error 1') ]
     ], 'has errors from before and after')
     t.end()
