@@ -8,124 +8,103 @@
 
 ## Usage
 
-Call `around(function (t, run))(test)` to define a test block. The given function will be executed as the test. The return value of this is a function that works exactly like tape's `test`.
-
-From within the function block you gave, call `run()` to invoke the test.
+Call `around(test)` to define a test block. The functions given to `.before()` and `.after()` will be executed before and after the test. The return value of this is a function that works exactly like tape's `test`.
 
 ```js
 var test = require('tape')
 var around = require('tape-around')
 
 // Define a test block using around().
-testBlock = around(function (t, run) {
-  t.pass('before hooks')
-  run()
-  t.pass('after hooks')
-  t.end()
+testBlock = around(test)
+  .before(function (t) {
+    t.plan(3)
+    t.pass('before hooks')
+    t.next()
+  })
+  .after(function (t) {
+    t.pass('after hooks')
+    t.end()
+  })
 })
 
-// Use it just like you would use test()
-testBlock(test)('synchronous test', function (t) {
-  t.equal(50 * 4, 200)
+testBlock('my test', function (t) {
+  t.equal(25 * 4, 100)
   t.end()
 })
 ```
 
 ## Passing data
 
-You can use this to build data before your tests and clean them up after. Call `run()` with arguments and they will be passed onto your tests as additional arguments after `t`.
+You can use this to build data before your tests and clean them up after. Call `t.next()` with arguments and they will be passed onto your tests as additional arguments after `t`.
 
 ```js
 var test = require('tape')
 
-testBlock = around(function (t, run) {
-  var user = User.create({ name: 'John' })  // before
-  run(user)
-  user.destroy()  // after
-  t.end()
-})
+testBlock = around()
+  .before(function (t) {
+    var user = User.create({ name: 'John' })
+    t.next(user)
+  })
+  .after(function (t, user) {
+    user.destroy()
+    t.end()
+  })
 
-testBlock(test)('synchronous test', function (t, user) {
+testBlock('user test', function (t, user) {
   t.equal(user.name, 'John', 'value is passed from the block')
   t.end()
 })
 ```
 
-## Asynchronous
-
-The `run()` function in the block always returns a promise. With this, you can invoke an after-test hook asynchronously.
-
-```js
-testBlock = around(function (t, run) {
-  t.pass('before called')
-  run()
-  .then(function () {
-    t.pass("called after your test's t.end()")
-    t.end()
-  })
-})
-
-testBlock(test)('asynchronous', function (t, value) {
-  setTimeout(function () {
-    t.pass('im an async test')
-    t.end()
-  })
-})
-```
-
-## Promises in blocks
-
-The block passed to `around()` can return a promise. In fact, since `run()` will always return a promise, you can chain that as well. If the `around()` block returns a rejected promise, the error will be passed onto `t.error`.
-
-When blocks return promises, there's no need to call `t.end()` in the block anymore.
-
-```js
-testBlock = around(function (t, run) {
-  return before()
-    .then(run)
-    .then(after)
-})
-
-function before () { /* returns a promise */ }
-function after () { /* returns a promise */ }
-
-testBlock(test)('promises', function (t, value) {
-  /* ... */
-})
-```
-
-## Promises in tests
-
-Your tests, too, can return a promise. If it fails, the rejection message will be passed onto `t.error`.
-
-When tests return promises, there's no need to call `t.end()` in the test anymore.
-
-```js
-testBlock = around(/* ... */)
-
-testBlock(test)('promises', function (t, value) {
-  return new Promise((resolve, reject) => {
-    // do stuff here
-    resolve()
-  })
-})
-```
-
 ## Nesting
 
-Since the return value of `around()(test)` works exactly like tape's `test`, you can chain them to make multiple `around` blocks wrap around each other.
+Since the return value of `around(test)` works exactly like tape's `test`, you can chain them to make multiple `around` blocks wrap around each other.
 
 ```js
-var one = around((t, next) => {
-  return next(100)
-})
-var two = around((t, a, next) => {
-  return next(200)
-})
+var one = around(test)
+  .before((t) => { t.next(100) })
 
-one(two(test))('chaining', function (t, a, b) {
+var two = around(one)
+  .before((t, a) => { t.next(a, 200) })
+
+two('chaining', function (t, a, b) {
   t.equal(a, 100)
   t.equal(b, 200)
+  t.end()
+})
+```
+
+## API
+
+### t.next(params...)
+
+Calls the next function in the pipeline and passes `params` to the parameters.
+
+Note that calling `t.next()` with no arguments will erase the current arguments. If you wish to preserve them, use `t.end()`.
+
+### t.end()
+
+This is changed so that you can invoke `t.end()` in any of the blocks (before, after, or the test) to call the next function in the pipeline. If there are no more functions in the pipeline, the test will be ended.
+
+### t.nextAdd(params...)
+
+If you notice above, the parameter `a` is passed through `t.next()`. This may be cumbersome once you have a lot of parameters to pass. Use `t.nextAdd()` to simply append it to the already-passed parameters.
+
+```js
+var one = around(test)
+  .before((t) => { t.nextAdd(100) })
+
+var two = around(one)
+  .before((t) => { t.nextAdd(200) })
+  // equivalent to `.before((t, a) => { t.next(a, 200) })`
+
+var three = around(two)
+  .before((t) => { t.nextAdd(300) })
+
+three('chaining', function (t, a, b, c) {
+  t.equal(a, 100)
+  t.equal(b, 200)
+  t.equal(c, 200)
   t.end()
 })
 ```
@@ -135,15 +114,19 @@ one(two(test))('chaining', function (t, a, b) {
 You can create [sinon][] sandboxes to automatically clear out sinon stubs.
 
 ```js
-var sandbox = around(function (t, next) {
-  var sandbox = require('sinon').sandbox.create()
-  return next(sandbox)
-    .then(function () { sandbox.restore() })
-})
+var sandbox = around(test)
+  .before((t) => {
+    var sandbox = require('sinon').sandbox.create()
+    t.next(sandbox)
+  })
+  .after((t, sandbox) => {
+    sandbox.restore()
+    t.end()
+  })
 
-sandbox(test)('testing with sinon', function (t, sinon) {
-  sinon.stub($, 'ajax')
-  // ...
+sandbox('my test', (t, sinon) => {
+  sinon.spyOn($, 'ajax')
+  // ...the spies will be cleaned up on exit automatically
   t.end()
 })
 ```

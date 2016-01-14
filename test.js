@@ -3,135 +3,232 @@ var test = require('tape')
 var around = require('./index')
 var block
 
-var sandbox = around(function (t, next) {
-  var sandbox = require('sinon').sandbox.create()
-  return next(sandbox)
-    .then(function () { sandbox.restore() })
+/*
+ * Simple
+ */
+
+block = around(test)
+  .before(function (t) {
+    t.plan(3)
+    t.pass('before called')
+    t.next()
+  })
+  .after(function (t) {
+    t.pass('after called')
+    t.end()
+  })
+
+block('simple', function (t) {
+  t.pass('hello')
+  t.end()
 })
 
-block = around(function (t, next) {
-  t.pass('before called')
-  return next(200)
-    .then(function () {
-      t.pass('after called')
+/*
+ * Multiple hooks
+ */
+
+block = around(test)
+  .before(function (t) {
+    t.plan(5)
+    t.pass('before called')
+    t.end()
+  })
+  .before(function (t) {
+    t.pass('before 2 called')
+    t.end()
+  })
+  .after(function (t) {
+    t.pass('after called')
+    t.end()
+  })
+  .after(function (t) {
+    t.pass('after 2 called')
+    t.end()
+  })
+
+block('multiple hooks', function (t, a) {
+  t.pass('test called')
+  t.end()
+})
+
+/*
+ * Passing
+ */
+
+block = around(test)
+  .before(function (t) {
+    t.plan(3)
+    t.pass('before called')
+    t.next(100)
+  })
+  .after(function (t) {
+    t.pass('after called')
+    t.end()
+  })
+
+block('passing values', function (t, a) {
+  t.equal(a, 100, 'value passed')
+  t.end()
+})
+
+/*
+ * Passing values in a pipeline
+ */
+
+block = around(test)
+  .before(function (t) {
+    t.plan(4)
+    t.pass('before called')
+    t.next(100)
+  })
+  .before(function (t, a) {
+    t.pass('before called')
+    t.next(200)
+  })
+  .after(function (t) {
+    t.pass('after called')
+    t.end()
+  })
+
+block('passing values in a pipeline', function (t, a) {
+  t.equal(a, 200, 'value passed')
+  t.end()
+})
+
+/*
+ * Sinon
+ */
+
+var sandbox = around(test)
+  .before(function (t) {
+    var sandbox = require('sinon').sandbox.create()
+    t.next(sandbox)
+  })
+  .after(function (t, sandbox) {
+    sandbox.restore()
+    t.end()
+  })
+
+/*
+ * Intercepting calls
+ */
+
+test('intercepting calls', function (t) {
+  var calls = []
+  var _t = {
+    pass: function () {
+      calls.push([ 'pass' ].concat([].slice.apply(arguments)))
+    },
+    plan: function () {
+      calls.push([ 'plan' ].concat([].slice.apply(arguments)))
+    },
+    end: function (err) {
+      t.deepEqual(calls, [
+        [ 'plan', 3 ],
+        [ 'pass', 'fake before called' ],
+        [ 'pass', 'fake test called' ],
+        [ 'pass', 'fake after called' ]
+      ], 't.* functions called in the right order')
+      t.pass('t.end called')
+      t.end(err)
+    }
+  }
+
+  var _test = function (name, fn) {
+    t.pass('test called')
+    fn(_t)
+  }
+
+  block = around(_test)
+    .before(function (t) {
+      t.plan(3)
+      t.pass('fake before called')
+      t.next()
     })
-})
-
-block(test)('try', function (t, value) {
-  t.equal(2, 2, 'is equal')
-  t.equal(value, 200, 'value is passed')
-  t.end()
-})
-
-block = around(function (t, next) {
-  t.pass('before called')
-  next(200)
-  t.pass('after called')
-  t.end()
-})
-
-block(test)('synchronous', function (t, value) {
-  t.equal(value, 200, 'value is passed')
-  t.end()
-})
-
-block = around(function (t, next) {
-  t.plan(3)
-  t.pass('before called')
-  next(200)
-    .then(function () {
-      t.pass('after called')
+    .after(function (t) {
+      t.pass('fake after called')
       t.end()
     })
-})
 
-block(test)('promise', function (t, value) {
-  return new Promise(function (resolve, reject) {
-    t.equal(value, 200, 'value is passed')
-    resolve()
+  block('simple', function (t) {
+    t.pass('fake test called')
+    t.end()
   })
 })
 
-block = around(function (t, next) {
-  t.plan(3)
-  t.pass('before called')
-  return next(200)
-    .then(function () {
-      t.pass('after called')
-    })
-})
+/*
+ * Intercept block
+ * using tape-around to test tape-around itself :)
+ */
 
-block(test)('promise 2', function (t, value) {
-  return new Promise(function (resolve, reject) {
-    t.equal(value, 200, 'value is passed')
-    resolve()
+var intercept = around(test)
+  .before(function (t) {
+    var calls = []
+    var next
+
+    var _t = {
+      pass: function () {
+        calls.push([ 'pass' ].concat([].slice.apply(arguments)))
+      },
+      equal: function () {
+        calls.push([ 'equal' ].concat([].slice.apply(arguments)))
+      },
+      plan: function () {
+        calls.push([ 'plan' ].concat([].slice.apply(arguments)))
+      },
+      end: function (err) {
+        next(err, calls)
+      }
+    }
+
+    function then (fn) {
+      next = fn
+    }
+
+    var _test = function (name, fn) {
+      t.pass('test called')
+      fn(_t)
+    }
+
+    t.next(_test, then)
+  })
+
+/*
+ * simple case
+ */
+
+intercept('simple case', function (t, _test, then) {
+  then(function (err, calls) {
+    t.error(err)
+    t.deepEqual(calls, [ [ 'pass', 'hi' ] ])
+    t.end()
+  })
+
+  var block = around(_test)
+
+  block('simple test', function (_t) {
+    _t.pass('hi')
+    _t.end()
   })
 })
 
-block = around(function (t, next) {
-  t.pass('before called')
-  next(200)
-  t.pass('after called')
-  t.end()
-})
+/*
+ * Errors
+ */
 
-block(test)('synchronous', function (t, value) {
-  t.equal(value, 200, 'value is passed')
-  t.end()
-})
-
-sandbox(test)('mutex (sandbox)', function (t, sinon) {
-  var tt = {
-    pass: sinon.spy(),
-    equal: sinon.spy(),
-    error: sinon.spy(),
-    end: sinon.spy(function () {
-      setTimeout(function () {
-        t.pass('ended')
-        t.deepEqual(tt.equal.getCall(0).args, [200, 200, 'value is passed'], 't.equal')
-        t.ok(tt.end.calledOnce, 't.end called once')
-        t.ok(tt.pass.calledOnce, 't.pass called once')
-        t.ok(tt.error.called, 't.error called')
-        t.end()
-      })
-    })
-  }
-
-  var faketest = function (name, fn) {
-    fn(tt)
-  }
-
-  block = around(function (tt, next) {
-    tt.pass('before')
-    next(200)
-    tt.end()
+intercept('errors', function (t, _test, then) {
+  then(function (err, calls) {
+    t.ok(err, 'has an error')
+    t.equal(err.message, 'snap', 'has the correct error')
+    t.deepEqual(calls, [ [ 'pass', 'hi' ] ])
+    t.end()
   })
 
-  block(faketest)('mutex', function (tt, value) {
-    tt.equal(value, 200, 'value is passed')
-    setTimeout(function () { tt.end() })
+  var block = around(_test)
+
+  block('simple test', function (_t) {
+    _t.pass('hi')
+    throw new Error('snap')
+    _t.end()
   })
 })
-
-var block1 = around(function (t, next) {
-  next(1)
-  t.end()
-})
-
-var block2 = around(function (t, a, next) {
-  next(a, 2)
-  t.end()
-})
-
-block1(test)('nesting 1', function (t, a) {
-  t.equal(a, 1)
-  t.end()
-})
-
-block2(block1(test))('nesting 2', function (t, a, b) {
-  t.equal(a, 1)
-  t.equal(b, 2)
-  t.end()
-})
-
-test('standard', require('tape-eslint')())
