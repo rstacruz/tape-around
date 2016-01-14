@@ -180,6 +180,7 @@ var intercept = around(test, 'interception:')
         calls.push([ 'plan' ].concat([].slice.apply(arguments)))
       },
       end: function (err) {
+        t.pass('(intercept) end called')
         next(err, calls)
       }
     }
@@ -189,7 +190,7 @@ var intercept = around(test, 'interception:')
     }
 
     var _test = function (name, fn) {
-      t.pass('test called')
+      t.pass('(intercept) test called')
       fn(_t)
     }
 
@@ -254,6 +255,7 @@ intercept('errors and after', function (t, _test, then) {
   var block = around(_test)
     .after(function (t) {
       t.pass('after called')
+      t.end()
     })
 
   block('simple test', function (_t) {
@@ -283,6 +285,70 @@ intercept('multiple after errors', function (t, _test, then) {
     })
     .after(function (t) {
       throw new Error('error 2')
+    })
+
+  block('simple test', function (_t) {
+    _t.pass('hi')
+    _t.end()
+  })
+})
+
+/*
+ * Multiple before/after errors
+ */
+
+intercept('multiple before/after errors', function (t, _test, then) {
+  then(function (err, calls) {
+    t.pass('then() called')
+    t.deepEqual(err, new Error('error 2'), 'has last error')
+    t.deepEqual(calls, [
+      [ 'error', new Error('error 0') ],
+      [ 'error', new Error('error 1') ]
+    ], 'has errors from before and after')
+    t.end()
+  })
+
+  var block = around(_test)
+    .before(function (t) {
+      throw new Error('error 0')
+    })
+    .after(function (t) {
+      throw new Error('error 1')
+    })
+    .after(function (t) {
+      throw new Error('error 2')
+    })
+
+  block('simple test', function (_t) {
+    _t.pass('hi')
+    _t.end()
+  })
+})
+
+/*
+ * Multiple before errors
+ */
+
+intercept('multiple before errors', function (t, _test, then) {
+  then(function (err, calls) {
+    t.pass('then() called')
+    t.deepEqual(err, new Error('error 0'), 'has last error')
+    t.deepEqual(calls, [
+      [ 'pass', 100 ]
+    ], 'has values from before')
+    t.end()
+  })
+
+  var block = around(_test)
+    .before(function (t) {
+      t.next(100)
+    })
+    .before(function (t, a) {
+      throw new Error('error 0')
+    })
+    .after(function (t, a) {
+      t.pass(a)
+      t.end()
     })
 
   block('simple test', function (_t) {
