@@ -80,7 +80,7 @@ two('chaining', function (t, a, b) {
 
 > `around(test, [prefix])`
 
-Creates a wrapper around `test`.
+Creates a wrapper around `test`. See [t.end](#t.end) for an example.
 
 Parameters:
 
@@ -98,7 +98,7 @@ You can also call `.before()` and `.after()` to add hooks to the pipeline.
 > `around(...).before(fn)`<br>
 > `around(...).after(fn)`
 
-Adds before and after hooks to the pipeline. These methods are chainable, and you may call this multiple times to add more functions.
+Adds before and after hooks to the pipeline. These methods are chainable, and you may call this multiple times to add more functions. See [t.end](#t.end) for an example.
 
 Parameters:
 
@@ -120,7 +120,27 @@ Parameters:
 
 > `t.end([err])`
 
-This is changed so that you can invoke `t.end()` in any of the blocks (before, after, or the test) to call the next function in the pipeline. If there are no more functions in the pipeline, the test will be ended.
+Ends the current block in the pipeline.
+
+This is changed from tape's default `t.end` so that you can invoke `t.end()` in any of the blocks (before, after, or the test) to call the next function in the pipeline. In short: it doesn't end the whole test, it end the block in the pipeline. If there are no more functions in the pipeline, the test will be ended.
+
+```js
+testBlock = around(test)
+  .before(function (t) {
+    t.pass('before hooks')
+    t.end()
+  })
+  .after(function (t) {
+    t.pass('after hooks')
+    t.end()
+  })
+})
+
+testBlock('my test', function (t) {
+  t.equal(25 * 4, 100)
+  t.end()
+})
+```
 
 ### t.nextAdd
 
