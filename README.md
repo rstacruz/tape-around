@@ -80,7 +80,7 @@ two('chaining', function (t, a, b) {
 
 > `around(test, [prefix])`
 
-Creates a wrapper around `test`. See [t.end](#t.end) for an example.
+Creates a wrapper around `test`. You can also call `.before()` and `.after()` to add hooks to the pipeline. See [t.end](#t.end) for an example.
 
 Parameters:
 
@@ -91,7 +91,16 @@ Returns:
 
 * *Function* — the return value is a function that works exactly like tape.
 
-You can also call `.before()` and `.after()` to add hooks to the pipeline.
+```js
+var aTest = around(test)
+  .before(...)
+  .after(...)
+
+aTest('using around()', function (t) {
+  t.pass('this works')
+  t.end()
+})
+```
 
 ### before / after
 
@@ -100,21 +109,11 @@ You can also call `.before()` and `.after()` to add hooks to the pipeline.
 
 Adds before and after hooks to the pipeline. These methods are chainable, and you may call this multiple times to add more functions. See [t.end](#t.end) for an example.
 
+Be sure to call [t.end()](#t.end) or [t.next()](#t.next) or [t.nextAdd](#t.nextAdd) in each of these blocks.
+
 Parameters:
 
 - `fn` *(Function(t, ...params))* — The function block to be invoked before (or after) the test. The `params` arguments are parameters taken from whatever was passed to `t.next()` in the previous function in the pipeline.
-
-### t.next
-
-> `t.next(...params)`
-
-Calls the next function in the pipeline and passes `params` to the parameters.
-
-Note that calling `t.next()` with no arguments will erase the current arguments. If you wish to preserve them, use `t.end()`.
-
-Parameters:
-
-- `...params` *(Any)* — The objects to be passed to the next function in the pipeline.
 
 ### t.end
 
@@ -142,13 +141,41 @@ testBlock('my test', function (t) {
 })
 ```
 
+### t.next
+
+> `t.next(...params)`
+
+Calls the next function in the pipeline and passes `params` to the parameters.
+
+Note that calling `t.next()` with no arguments will erase the current arguments. If you wish to preserve them, use `t.end()`.
+
+Parameters:
+
+- `...params` *(Any)* — The objects to be passed to the next function in the pipeline.
+
+```js
+var nextTest = around(test)
+  .before((t)       => { t.next(100) })
+  .before((t, a)    => { t.next(a, 200) })
+  .before((t, a, b) => { t.next(a, b, 300) })
+
+addTest('using t.next', function (t, a, b, c) {
+  t.equal(a, 100)
+  t.equal(b, 200)
+  t.equal(c, 200)
+  t.end()
+})
+```
+
 ### t.nextAdd
 
 > `t.nextAdd(params...)`
 
 Calls the next function in the pipeline and passes `params` as additional parameters.
 
-If you notice in the [nesting example](#nesting), the parameter `a` is passed through `t.next()`. This may be cumbersome once you have a lot of parameters to pass. Use `t.nextAdd()` to simply append it to the already-passed parameters.
+If you notice in the [t.next example](#t.next), the parameter `a` is passed through `t.next()`. This may be cumbersome once you have a lot of parameters to pass. Use `t.nextAdd()` to simply append it to the already-passed parameters.
+
+Here's the same [t.next example](#t.next) but written with `t.nextAdd`:
 
 ```js
 var addTest = around(test)
@@ -162,16 +189,6 @@ addTest('using nextAdd', function (t, a, b, c) {
   t.equal(c, 200)
   t.end()
 })
-```
-
-Without `nextAdd`, this example would be written as:
-
-
-```js
-var nextTest = around(test)
-  .before((t)       => { t.next(100) })
-  .before((t, a)    => { t.next(a, 200) })
-  .before((t, a, b) => { t.next(a, b, 300) })
 ```
 
 ## Sinon.js example
