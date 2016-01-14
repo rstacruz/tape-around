@@ -8,7 +8,7 @@
 
 ## Usage
 
-Call [`around(test)`](#around) to define a test block. The functions given to [before()](#before--after) and [after()](#before--after]) will be executed before and after the test. The return value of this is a function that works exactly like tape's `test`.
+Call [`around(test)`](#around) to define a test block. The functions given to [before()](#before) and [after()](#after]) will be executed before and after the test. The return value of this is a function that works exactly like tape's `test`.
 
 ```js
 var test = require('tape')
@@ -101,18 +101,27 @@ aTest('using around()', function (t) {
 })
 ```
 
-### before / after
+### before
 
-> `around(...).before(fn)`<br>
-> `around(...).after(fn)`
+> `around(...).before(fn)`
 
-Adds before and after hooks to the pipeline. These methods are chainable, and you may call this multiple times to add more functions. See [t.end](#t.end) for an example.
+Adds hooks to the pipeline to run before the tests. These methods are chainable, and you may call this multiple times to add more functions. See [t.end](#t.end) for an example. Be sure to call [t.end()](#t.end) or [t.next()](#t.next) or [t.nextAdd](#t.nextAdd) in each of these blocks.
 
-Be sure to call [t.end()](#t.end) or [t.next()](#t.next) or [t.nextAdd](#t.nextAdd) in each of these blocks.
+When one of your before hooks fail, the test is not executed, and other before hooks will not be executed too. The *after* hooks, however, will continue to run.
 
 Parameters:
 
 - `fn` *(Function(t, ...params))* — The function block to be invoked before (or after) the test. The `params` arguments are parameters taken from whatever was passed to `t.next()` in the previous function in the pipeline.
+
+### after
+
+> `around(...).after(fn)`
+
+Adds hooks to the pipeline to run before the tests. These methods are chainable, and you may call this multiple times to add more functions. See [t.end](#t.end) for an example. Be sure to call [t.end()](#t.end) or [t.next()](#t.next) or [t.nextAdd](#t.nextAdd) in each of these blocks.
+
+Unlike [before()](#before), *after* hooks will always run, even if tests and before hooks fail.
+
+See [before()](#before) for explanation on parameters.
 
 ### t.end
 
@@ -168,7 +177,7 @@ addTest('using t.next', function (t, a, b, c) {
 
 ### t.nextAdd
 
-> `t.nextAdd(params...)`
+> `t.nextAdd(...params)`
 
 Calls the next function in the pipeline and passes `params` as additional parameters.
 
