@@ -85,7 +85,7 @@ Creates a wrapper around `test`.
 Parameters:
 
 - `test` *Function* — can either be `require('tape')`, or another `around()` function.
--  `prefix` *String?* — is given, test names will be prefixed by this name.
+-  `prefix` *String?* — if given, test names will be prefixed by this name.
 
 Returns:
 
