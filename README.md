@@ -18,7 +18,7 @@ var around = require('tape-around')
 testBlock = around(test)
   .before(function (t) {
     t.pass('before hook called')
-    t.next()
+    t.end()
   })
   .after(function (t) {
     t.pass('after hook called')
@@ -140,7 +140,7 @@ See [before()](#before) for explanation on parameters.
 
 Ends the current block in the pipeline.
 
-This is changed from tape's default `t.end` so that you can invoke `t.end()` in any of the blocks (before, after, or the test) to call the next function in the pipeline. In short: it doesn't end the whole test, it end the block in the pipeline. If there are no more functions in the pipeline, the test will be ended.
+This is changed from tape's default `t.end` so that you can invoke `t.end()` in any of the blocks (before, after, or the test) to call the next function in the pipeline. In short: it doesn't end the whole test, it ends the block in the pipeline. If there are no more functions in the pipeline, the test will be ended.
 
 ```js
 testBlock = around(test)
