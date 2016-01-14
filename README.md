@@ -113,14 +113,20 @@ You can create [sinon][] sandboxes to automatically clear out sinon stubs.
 
 ```js
 var sandbox = around(test)
-  .before(function (t) {
+  .before((t) => {
     var sandbox = require('sinon').sandbox.create()
     t.next(sandbox)
   })
-  .after(function (t, sandbox) {
+  .after((t, sandbox) => {
     sandbox.restore()
     t.end()
   })
+
+sandbox('my test', (t, sinon) => {
+  sinon.spyOn($, 'ajax')
+  // ...the spies will be cleaned up on exit automatically
+  t.end()
+})
 ```
 
 [sinon]: http://sinonjs.org/
