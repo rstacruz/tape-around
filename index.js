@@ -1,7 +1,7 @@
 var assign = require('object-assign')
 var Promise = require('any-promise')
 
-module.exports = function around (tape, _hooks) {
+module.exports = function around (tape, msg, _hooks) {
   var hooks = {
     before: _hooks && _hooks.before || [],
     after: _hooks && _hooks.after || []
@@ -26,7 +26,9 @@ module.exports = function around (tape, _hooks) {
   }
 
   function run2 (name, fn, tape) {
-    return tape(name, function (t) {
+    var newname = msg ? msg + ' ' + name : name
+
+    return tape(newname, function (t) {
       Promise.resolve()
         .then(invoke(hooks.before, t))
         .then(promisify(fn, t))
@@ -37,12 +39,12 @@ module.exports = function around (tape, _hooks) {
   }
 
   function before (fn) {
-    return around(tape,
+    return around(tape, msg,
       assign({}, hooks, { before: hooks.before.concat([fn]) }))
   }
 
   function after (fn) {
-    return around(tape,
+    return around(tape, msg,
       assign({}, hooks, { after: hooks.after.concat([fn]) }))
   }
 }

@@ -161,7 +161,7 @@ test('intercepting calls', function (t) {
  * using tape-around to test tape-around itself :)
  */
 
-var intercept = around(test)
+var intercept = around(test, 'interception:')
   .before(function (t) {
     var calls = []
     var next
