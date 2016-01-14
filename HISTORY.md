@@ -1,7 +1,14 @@
+## [v2.2.0]
+> Jan 14, 2016
+
+- Always run `after()` hooks even if tests fail.
+
+[v2.2.0]: https://github.com/rstacruz/tape-around/compare/v2.1.0...v2.2.0
+
 ## [v2.1.0]
 > Jan 14, 2016
 
-- Ad support for test name prefixes.
+- Add support for test name prefixes.
 
 [v2.1.0]: https://github.com/rstacruz/tape-around/compare/v2.0.0...v2.1.0
 
