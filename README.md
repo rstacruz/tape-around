@@ -76,6 +76,16 @@ two('chaining', function (t, a, b) {
 
 ## API
 
+### around(test)
+
+Creates a wrapper around `test`. The parameter `test` can either be `require('tape')`, or another `around()` function. The resulting function is a function that works exactly like tape.
+
+You can also call `.before()` and `.after()` to add hooks to the pipeline.
+
+### .before(fn)<br>.after(fn)
+
+Adds before and after hooks to the pipeline. You may call this multiple times to add more functions.
+
 ### t.next(params...)
 
 Calls the next function in the pipeline and passes `params` to the parameters.
