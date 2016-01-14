@@ -8,7 +8,7 @@
 
 ## Usage
 
-Call `around(test)` to define a test block. The functions given to `.before()` and `.after()` will be executed before and after the test. The return value of this is a function that works exactly like tape's `test`.
+Call [`around(test)`](#around) to define a test block. The functions given to [before()](#before--after) and [after()](#before--after]) will be executed before and after the test. The return value of this is a function that works exactly like tape's `test`.
 
 ```js
 var test = require('tape')
@@ -17,12 +17,11 @@ var around = require('tape-around')
 // Define a test block using around().
 testBlock = around(test)
   .before(function (t) {
-    t.plan(3)
-    t.pass('before hooks')
+    t.pass('before hook called')
     t.next()
   })
   .after(function (t) {
-    t.pass('after hooks')
+    t.pass('after hook called')
     t.end()
   })
 })
@@ -35,7 +34,7 @@ testBlock('my test', function (t) {
 
 ## Passing data
 
-You can use this to build data before your tests and clean them up after. Call `t.next()` with arguments and they will be passed onto your tests as additional arguments after `t`.
+You can use this to build data before your tests and clean them up after. Call [`t.next()`](#t.next) with arguments and they will be passed onto your tests as additional arguments after `t`.
 
 ```js
 var test = require('tape')
@@ -58,7 +57,7 @@ testBlock('user test', function (t, user) {
 
 ## Nesting
 
-Since the return value of `around(test)` works exactly like tape's `test`, you can chain them to make multiple `around` blocks wrap around each other.
+Since the return value of [`around(test)`](#around) works exactly like tape's `test`, you can chain them to make multiple *around()* blocks wrap around each other.
 
 ```js
 var one = around(test)
