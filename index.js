@@ -9,10 +9,24 @@ module.exports = function around (tape, _hooks) {
 
   run.before = before
   run.after = after
+  run.only = only
+  run.skip = skip
   return run
 
   function run (name, fn) {
-    tape(name, function (t) {
+    return run2(name, fn, tape)
+  }
+
+  function only (name, fn) {
+    return run2.only(name, fn, tape.only)
+  }
+
+  function skip (name, fn) {
+    return run2.skip(name, fn, tape.skip)
+  }
+
+  function run2 (name, fn, tape) {
+    return tape(name, function (t) {
       Promise.resolve()
         .then(invoke(hooks.before, t))
         .then(promisify(fn, t))
@@ -23,11 +37,13 @@ module.exports = function around (tape, _hooks) {
   }
 
   function before (fn) {
-    return around(tape, assign({}, hooks, { before: hooks.before.concat([fn]) }))
+    return around(tape,
+      assign({}, hooks, { before: hooks.before.concat([fn]) }))
   }
 
   function after (fn) {
-    return around(tape, assign({}, hooks, { after: hooks.after.concat([fn]) }))
+    return around(tape,
+      assign({}, hooks, { after: hooks.after.concat([fn]) }))
   }
 }
 
@@ -63,8 +79,4 @@ function promisify (fn, t) {
       }
     })
   }
-}
-
-function isPromise (promise) {
-  return promise && typeof promise.then === 'function'
 }
