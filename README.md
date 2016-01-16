@@ -1,6 +1,6 @@
 # tape-around
 
-> Add before and after hooks to [tape][] tests
+> Add before and after hooks to [tape]tests
 
 [![Status](https://travis-ci.org/rstacruz/tape-around.svg?branch=master)](https://travis-ci.org/rstacruz/tape-around "See test builds")
 
